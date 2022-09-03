@@ -1,80 +1,153 @@
-#ifndef _SHELL_H_
-#define _SHELL_H_
+#ifndef SHELL_H
+#define SHELL_H
+
+/***** MACROS *****/
+
+#define PRINT(c) (write(STDERR_FILENO, c, _strlen(c)))
+#define BUFSIZE 10240
+#define DELIMITER " \t\r\n\a"
+
+/*** STANDARD LIBRARIES ***/
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 #include <sys/types.h>
-#include <sys/stat.h>
+#include <string.h>
 #include <sys/wait.h>
-#include <limits.h>
+#include <stdlib.h>
 #include <signal.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <linux/limits.h>
 
-/**
- * struct variables - variables
- * @av: command line arguments
- * @buffer: buffer of command
- * @env: environment variables
- * @count: count of commands entered
- * @argv: arguments at opening of shell
- * @status: exit status
- * @commands: commands to execute
- */
-typedef struct variables
-{
-	char **av;
-	char *buffer;
-	char **env;
-	size_t count;
-	char **argv;
-	int status;
-	char **commands;
-} vars_t;
+/******** STRING HANDLER FUNCTIONS **********/
 
-/**
- * struct builtins - struct for the builtin functions
- * @name: name of builtin command
- * @f: function for corresponding builtin
- */
-typedef struct builtins
-{
-	char *name;
-	void (*f)(vars_t *);
-} builtins_t;
+char *_strncpy(char *dest, char *src, int n);
+int _strlen(char *s);
+int _putchar(char c);
+int _atoi(char *s);
+void _puts(char *str);
+int _strcmp(char *s1, char *s2);
+int _isalpha(int c);
+void array_rev(char *arr, int len);
+int intlen(int num);
+char *_itoa(unsigned int n);
+char *_strcat(char *dest, char *src);
+char *_strcpy(char *dest, char *src);
+char *_strchr(char *s, char c);
+int _strncmp(const char *s1, const char *s2, size_t n);
+char *_strdup(char *str);
 
-char **make_env(char **env);
+/*********** MEMORY HANDLERS ***********/
+
+void free_env(char **env);
+void *fill_an_array(void *a, int el, unsigned int len);
+char *_memcpy(char *dest, char *src, unsigned int n);
+void *_calloc(unsigned int size);
+void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
+void free_all(char **input, char *line);
+
+/****** MISCELLANEOUS AND INPUT FUNCTIONS *******/
+
+char *_getline();
+char *space(char *str);
+char *enter(char *string);
+void hashtag_handler(char *buff);
+void prompt(void);
+unsigned int check_delim(char c, const char *str);
+char *_strtok(char *str, const char *delim);
+int history(char *input);
+char **separator(char *input);
+
+/****** FILE ARGUMENT HANDLER FUNCTIONS ******/
+
+void read_file(char *file, char **argv);
+void treat_file(char *line, int count, FILE *fp, char **argv);
+void exit_bul_for_file(char **cmd, char *line, FILE *fd);
+
+/****** PARSED ARGUMENT HANDLER FUNCTIONS *****/
+
+char **parse_cmd(char *input);
+int handle_builtin(char **cmd, int er);
+int check_cmd(char **cmd, char *input, int c, char **argv);
+void signal_to_handle(int sig);
+
+/******* ERROR HANDLERS ******/
+
+void print_error(char *input, int counter, char **argv);
+void _prerror(char **argv, int c, char **cmd);
+void error_file(char **argv, int c);
+
+/****** ENVIRONMENT HANDLERS ******/
+
+extern char **environ;
+void create_envi(char **envi);
 void free_env(char **env);
 
-ssize_t _puts(char *str);
-char *_strdup(char *strtodup);
-int _strcmpr(char *strcmp1, char *strcmp2);
-char *_strcat(char *strc1, char *strc2);
-unsigned int _strlen(char *str);
+/****** PRINTING FUNCTIONS *****/
 
-char **tokenize(char *buffer, char *delimiter);
-char **_realloc(char **ptr, size_t *size);
-char *new_strtok(char *str, const char *delim);
+void print_number(unsigned int n);
+void print_number_int(int n);
+int print_echo(char **cmd);
 
-void (*check_for_builtins(vars_t *vars))(vars_t *vars);
-void new_exit(vars_t *vars);
-void _env(vars_t *vars);
-void new_setenv(vars_t *vars);
-void new_unsetenv(vars_t *vars);
+/******* PATH FINDER *******/
 
-void add_key(vars_t *vars);
-char **find_key(char **env, char *key);
-char *add_value(char *key, char *value);
-int _atoi(char *str);
+int path_cmd(char **cmd);
+char *build(char *token, char *value);
+char *_getenv(char *name);
 
-void check_for_path(vars_t *vars);
-int path_execute(char *command, vars_t *vars);
-char *find_path(char **env);
-int execute_cwd(vars_t *vars);
-int check_for_dir(char *str);
+/******* HELP HANDLERS *******/
 
-void print_error(vars_t *vars, char *msg);
-void _puts2(char *str);
-char *_uitoa(unsigned int count);
+void help_env(void);
+void help_setenv(void);
+void help_unsetenv(void);
+void help_history(void);
+void help_all(void);
+void help_alias(void);
+void help_cd(void);
+void help_exit(void);
+void help_help(void);
+int display_help(char **cmd, __attribute__((unused))int st);
 
-#endif /* _SHELL_H_ */
+/****** BUILTIN COMMAND HANDLERS AND EXECUTE ******/
+
+int check_builtin(char **cmd);
+int handle_builtin(char **cmd, int st);
+void exit_bul(char **cmd, char *input, char **argv, int c,
+		int stat);
+int change_dir(char **cmd, __attribute__((unused))int st);
+/**
+ * dis_env - dis_env
+ * @cmd: command
+ * @st: integer parameter
+ * Return: integer depending on its result
+ */
+int dis_env(__attribute__((unused)) char **cmd,
+		__attribute__((unused)) int st);
+int echo_bul(char **cmd, int st);
+/**
+ * history_dis - history
+ * @c: char pointer
+ * @st: integer parameter
+ * Return: int value
+ */
+int history_dis(__attribute__((unused))char **c,
+		__attribute__((unused))int st);
+
+/****** BUILT-IN COMMANDS STRUCT *****/
+
+/**
+ * struct _builtin - Defines a struct that conatins built-in commands
+ * with their respective implementation functions
+ * @command: - Built-in command
+ * @function: - Pointer to custom functions that have
+ * similar functionalities as the built-in commands
+ */
+typedef struct _builtin
+{
+	char *command;
+	int (*function)(char **line, int st);
+} builtin;
+
+#endif /*SHELL_H*/
